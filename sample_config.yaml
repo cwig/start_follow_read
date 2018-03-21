@@ -1,0 +1,107 @@
+network:
+  sol:
+    base0: 16 #architecture dependant
+    base1: 16 #architecture dependant
+ 
+  lf:
+    look_ahead_matrix: 
+    step_bias:
+
+  hw:
+    num_of_outputs: 197
+    num_of_channels: 3
+    cnn_out_size: 512 #architecture dependant
+    input_height: 32 #architecture dependant
+    char_set_path: "data/char_set.json"
+
+pretraining:
+  training_set:
+    img_folder: "../hwn5-comp-2017/data/Train-A"
+    json_folder: "data/init_train_a_2/training"
+    #json_folder: "../hwn_e2e_fsl/data/init_train_a"
+
+  validation_set:
+    img_folder: "../hwn5-comp-2017/data/Train-A"
+    json_folder: "data/init_train_a_2/validation"
+    #json_folder: "../hwn_e2e_fsl/data/init_train_a"
+
+  sol:
+    alpha_alignment: 0.1
+    alpha_backprop: 0.1
+    learning_rate: 0.0001 #pyyaml bug: no scientific notation
+    crop_params:
+       prob_label: 0.5
+       crop_size: 256
+    training_rescale_range: [384, 640]
+    validation_rescale_range: [512,512] #You should not validation on random range 
+    batch_size: 1 #During pretrain, only 45 images. If batch is 32 you would get 32 and 13 in an epoch
+    images_per_epoch: 1000  
+
+  lf:
+    learning_rate: 0.0001 #pyyaml bug: no scientific notation
+    batch_size: 1
+    images_per_epoch: 1000
+
+  hw:
+    learning_rate: 0.0002 #pyyaml bug: no scientific notation
+    batch_size: 8
+    images_per_epoch: 1000
+
+  snapshot_path: "data/snapshots/init"
+    
+training:
+  training_set:
+    img_folder: "../hwn5-comp-2017/data/Train-B"
+    json_folder: "data/train_b/training"
+
+  validation_set:
+    img_folder: "../hwn5-comp-2017/data/Train-B"
+    json_folder: "data/train_b/validation/9"
+
+  sol:
+    alpha_alignment: 0.1
+    alpha_backprop: 0.1
+    learning_rate: 0.0001 #pyyaml bug: no scientific notation
+    crop_params:
+       scale_range: [1.0,1.0]
+       prob_label: 0.5
+       crop_size: 256
+    rescale_range: [512,512]
+    
+    batch_size: 1
+    refresh_interval: 3600 #seconds
+    batches_per_epoch: 250 #batches
+    validation_size: 50    #images
+
+  lf:
+    learning_rate: 0.0001 #pyyaml bug: no scientific notation
+
+    batch_size: 1
+    refresh_interval: 3600 #seconds
+    batches_per_epoch: 100 #batches
+    validation_size: 50 #images
+
+  hw:
+    learning_rate: 0.0002 #pyyaml bug: no scientific notation
+
+    batch_size: 8
+    refresh_interval: 3600 #seconds
+    batches_per_epoch: 100 #batches
+    validation_size: 1000 #images
+
+  alignment:
+    accept_threshold: 0.1
+    sol_resize_width: 512
+    use_full_resolution: true
+    refine_sol: true
+    metric: "cer"
+
+  snapshot:
+    best_overall: "data/snapshots/best_overall"
+    best_validation: "data/snapshots/best_validation"
+    current: "data/snapshots/current"
+  
+  
+  
+  
+  
