@@ -50,7 +50,7 @@ def collate(batch):
 
 # CNT = 0
 class SolDataset(Dataset):
-    def __init__(self, json_folder, img_folder, rescale_range=None, transform=None):
+    def __init__(self, json_folder, img_folder, rescale_range=None, transform=None, random_subset_size=None):
 
         json_paths = {}
         for root, folders, files in os.walk(json_folder):
@@ -92,14 +92,9 @@ class SolDataset(Dataset):
 
         self.ids = new_ids
 
-        # global CNT
-        # if CNT == 0:
-        #     self.ids = self.ids[:45]
-        #     CNT += 1
-        # else:
-        #     self.ids = self.ids[45:]
-
-        print "SOL Ids", len(self.ids)
+        if random_subset_size is not None:
+            self.ids = random.sample(self.ids, min(random_subset_size, len(self.ids)))
+        print "SOL Ids Count:", len(self.ids)
         self.transform = transform
 
 

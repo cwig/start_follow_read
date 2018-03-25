@@ -19,26 +19,30 @@ import os
 import time
 import random
 
-def init_model(config, sol_dir='best_validation', lf_dir='best_validation', hw_dir='best_validation'):
+def init_model(config, sol_dir='best_validation', lf_dir='best_validation', hw_dir='best_validation', only_load=None):
     base_0 = config['network']['sol']['base0']
     base_1 = config['network']['sol']['base1']
 
-    sol = StartOfLineFinder(base_0, base_1)
-    sol_state = safe_load.torch_state(os.path.join(config['training']['snapshot'][sol_dir], "sol.pt"))
+    sol = None
+    lf = None
+    hw = None
 
-    sol.load_state_dict(sol_state)
+    if only_load is None or only_load == 'sol':
+        sol = StartOfLineFinder(base_0, base_1)
+        sol_state = safe_load.torch_state(os.path.join(config['training']['snapshot'][sol_dir], "sol.pt"))
+        sol.load_state_dict(sol_state)
+        sol.cuda()
 
-    lf = LineFollower(config['network']['hw']['input_height'])
-    lf_state = safe_load.torch_state(os.path.join(config['training']['snapshot'][lf_dir], "lf.pt"))
+    if only_load is None or only_load == 'lf':
+        lf = LineFollower(config['network']['hw']['input_height'])
+        lf_state = safe_load.torch_state(os.path.join(config['training']['snapshot'][lf_dir], "lf.pt"))
+        lf.load_state_dict(lf_state)
+        lf.cuda()
 
-    lf.load_state_dict(lf_state)
-
-    hw = cnn_lstm.create_model(config['network']['hw'])
-    hw_state = safe_load.torch_state(os.path.join(config['training']['snapshot'][hw_dir], "hw.pt"))
-    hw.load_state_dict(hw_state)
-
-    sol.cuda()
-    lf.cuda()
-    hw.cuda()
+    if only_load is None or only_load == 'hw':
+        hw = cnn_lstm.create_model(config['network']['hw'])
+        hw_state = safe_load.torch_state(os.path.join(config['training']['snapshot'][hw_dir], "hw.pt"))
+        hw.load_state_dict(hw_state)
+        hw.cuda()
 
     return sol, lf, hw

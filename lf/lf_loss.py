@@ -46,10 +46,10 @@ def special_loss(xy_output, xy_positions):
     return loss
 
 def point_loss(xy_output, xy_positions):
-    loss_fn = torch.nn.MSELoss()
+    # loss_fn = torch.nn.MSELoss()
     loss = 0
     for i, l in enumerate(xy_positions):
-        dif = loss_fn(xy_output[i][:,:2,:2], l)
-        # dif = torch.abs(xy_output[i][:,:2,:2] - l).sum()
+        # dif = loss_fn(xy_output[i][:,:2,:2], l)
+        dif = torch.abs(xy_output[i][:,:2,:2] - l).sum()
         loss += dif
     return loss

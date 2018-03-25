@@ -29,6 +29,21 @@ class LineFollower(nn.Module):
         renorm_matrix = transformation_utils.compute_renorm_matrix(image)
         expanded_renorm_matrix = renorm_matrix.expand(batch_size,3,3)
 
+        t = ((np.arange(self.output_grid_size) + 0.5) / float(self.output_grid_size))[:,None].astype(np.float32)
+        t = np.repeat(t,axis=1, repeats=self.output_grid_size)
+        t = Variable(torch.from_numpy(t), requires_grad=False).cuda()
+        s = t.t()
+
+        t = t[:,:,None]
+        s = s[:,:,None]
+
+        interpolations = torch.cat([
+            (1-t)*s,
+            (1-t)*(1-s),
+            t*s,
+            t*(1-s),
+        ], dim=-1)
+
         view_window = Variable(torch.cuda.FloatTensor([
             [2,0,2],
             [0,2,0],
@@ -94,7 +109,7 @@ class LineFollower(nn.Module):
 
             resampled = get_patches(image, crop_window, grid_gen, allow_end_early)
 
-            if resampled is None:
+            if resampled is None and i > 0:
                 #get patches checks to see if stopping early is allowed
                 break
 
@@ -126,23 +141,7 @@ class LineFollower(nn.Module):
         a_pt = a_pt.transpose(1,0)
         a_pt = a_pt.expand(batch_size, a_pt.size(0), a_pt.size(1))
 
-        t = ((np.arange(self.output_grid_size) + 0.5) / float(self.output_grid_size))[:,None].astype(np.float32)
-        t = np.repeat(t,axis=1, repeats=self.output_grid_size)
-        t = Variable(torch.from_numpy(t), requires_grad=False).cuda()
-        s = t.t()
-
-        t = t[:,:,None]
-        s = s[:,:,None]
-
-        interpolations = torch.cat([
-            (1-t)*s,
-            (1-t)*(1-s),
-            t*s,
-            t*(1-s),
-        ], dim=-1)
-
         for i in xrange(0, len(next_windows)-1):
-
 
             w_0 = next_windows[i]
             w_1 = next_windows[i+1]

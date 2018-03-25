@@ -31,7 +31,7 @@ def get_subdivide_pt(i, pred_full, lf):
 
     return x0, y0, x1, y1
 
-def save_improved_idxs(improved_idxs, decoded_hw, decoded_raw_hw, out, x, json_folder, trim_to_sol):
+def save_improved_idxs(improved_idxs, decoded_hw, decoded_raw_hw, out, x, json_folder):
 
     output_lines = [{
         "gt": gt['gt']
@@ -49,6 +49,7 @@ def save_improved_idxs(improved_idxs, decoded_hw, decoded_raw_hw, out, x, json_f
 
         line_points = []
         lf_path = out['lf']
+        end = out['ending'][k]
         for j in xrange(len(lf_path)):
             p = lf_path[j][k]
             s = out['results_scale']
@@ -60,24 +61,24 @@ def save_improved_idxs(improved_idxs, decoded_hw, decoded_raw_hw, out, x, json_f
                 "y1": p[1][0] * s
             })
 
-
-
-        pred_full = decoded_raw_hw[k]
-        first_idx = 0
-        for l_idx in range(len(pred_full)):
-            if pred_full[l_idx] != "~":
-                first_idx = l_idx
+            if j > end:
                 break
 
-        sol_point = deepcopy(line_points[1])#TODO: update to backward idx
 
-        if trim_to_sol:
-            if first_idx != 0:
-                x0, y0, x1, y1 = get_subdivide_pt(first_idx, pred_full, line_points)
-                sol_point['x0'] = x0
-                sol_point['y0'] = y0
-                sol_point['x1'] = x1
-                sol_point['y1'] = y1
+
+        begin = out['beginning'][k]
+        begin_f = int(np.floor(begin))
+        p0 = out['lf'][begin_f][k]
+        p1 = out['lf'][begin_f+1][k]
+        t = begin - np.floor(begin)
+        p = p0 * (1 - t) + p1 * t
+
+        sol_point = {
+            "x0": p[0][1] * s,
+            "x1": p[0][0] * s,
+            "y0": p[1][1] * s,
+            "y1": p[1][0] * s
+        }
 
         img_file_name = "{}_{}.png".format(x['img_key'], i)
 

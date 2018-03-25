@@ -37,7 +37,7 @@ class E2EModel(nn.Module):
         self.lf.eval()
         self.hw.eval()
 
-    def forward(self, x, use_full_img=False, accpet_threshold=0.1, volatile=True, gt_lines=None, idx_to_char=None):
+    def forward(self, x, use_full_img=True, accpet_threshold=0.1, volatile=True, gt_lines=None, idx_to_char=None):
 
         sol_img = Variable(x['resized_img'].type(self.dtype), requires_grad=False, volatile=volatile)
 

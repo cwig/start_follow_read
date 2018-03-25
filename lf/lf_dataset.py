@@ -8,6 +8,7 @@ import os
 import cv2
 import numpy as np
 import math
+import random
 
 from utils import safe_load
 
@@ -33,7 +34,7 @@ def get_subdivide_pt(i, pred_full, lf):
     return x, y
 
 class LfDataset(Dataset):
-    def __init__(self, json_folder, img_folder, trim_ends=False):
+    def __init__(self, json_folder, img_folder, random_subset_size=None):
         json_paths = {}
         for root, folders, files in os.walk(json_folder):
             for f in files:
@@ -56,8 +57,7 @@ class LfDataset(Dataset):
 
         self.detailed_ids = []
         for image_key in self.ids:
-            #with open(json_paths[image_key]) as f:
-            #    d = json.load(f)
+
             d = safe_load.json_state(json_paths[image_key])
             if d is None:
                 continue
@@ -65,14 +65,13 @@ class LfDataset(Dataset):
             for i in xrange(len(d)):
                 if 'lf' not in d[i]:
                     continue
-                # if 'pred_full' not in d[i]:
-                #     continue
                 self.detailed_ids.append((image_key, i))
 
+        if random_subset_size is not None:
+            self.detailed_ids = random.sample(self.detailed_ids, min(len(self.ids), random_subset_size))
 
-        print(len(self.ids))
+        print(len(self.detailed_ids))
         self.ids = self.detailed_ids
-        self.trim_ends = trim_ends
 
     def __len__(self):
         return len(self.ids)
@@ -81,8 +80,6 @@ class LfDataset(Dataset):
 
         image_key, line_idx = self.ids[idx]
         gt_json_path = self.json_paths[image_key]
-        #with open(gt_json_path) as f:
-        #    gt_json = json.load(f)
         gt_json = safe_load.json_state(gt_json_path)
 
         img_path = self.img_paths[image_key]
@@ -90,20 +87,6 @@ class LfDataset(Dataset):
         positions = []
         positions_xy = []
 
-        #if 'pred_full' in gt_json[line_idx]:
-        if 'pred_full' in gt_json:
-            pred_full = gt_json[line_idx]['pred_full']
-
-            last_idx = 0
-            for i in range(len(pred_full)):
-                if pred_full[i] != "~":
-                    last_idx = i+1
-
-            percent = last_idx / float(len(pred_full))
-            trim_idx = int(len(gt_json[line_idx]['lf']) * percent+1)
-
-            trim_idx = max(2, trim_idx)
-            gt_json[line_idx]['lf'] = gt_json[line_idx]['lf'][:trim_idx]
 
         if 'lf' not in gt_json[line_idx]:
             return None

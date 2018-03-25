@@ -67,7 +67,7 @@ for epoch in xrange(1000):
 
         reset_interval = 4
         grid_line, _, _, xy_output = line_follower(img, positions[:1], steps=len(positions), all_positions=positions,
-                                           reset_interval=reset_interval, randomize=False, skip_grid=True)
+                                           reset_interval=reset_interval, randomize=True, skip_grid=True)
 
         loss = lf_loss.point_loss(xy_output, xy_positions)
 

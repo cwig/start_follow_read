@@ -15,12 +15,14 @@ import sys
 import json
 import time
 import yaml
+import operator
+
 
 from e2e import e2e_model
 from e2e.e2e_model import E2EModel
 
-from e2e import alignment_dataset_single, e2e_postprocessing
-from e2e.alignment_dataset_single import AlignmentDataset
+from e2e import alignment_dataset_single, e2e_postprocessing, visualization
+from e2e.alignment_dataset import AlignmentDataset
 
 from utils.continuous_state import init_model
 
@@ -62,9 +64,18 @@ def alignment_step(config, dataset_lookup=None, model_mode='best_validation'):
     lf_nms_thresholds = np.arange(0.1, 1.0, 0.2)
     lf_nms_thresholds_idx = range(len(lf_nms_thresholds))
 
+    # sol_thresholds = [0.1]
+    # sol_thresholds_idx = range(len(sol_thresholds))
+    #
+    # lf_nms_ranges = [[0,6]]
+    # lf_nms_ranges_idx = range(len(lf_nms_ranges))
+    #
+    # lf_nms_thresholds = [0.5]
+    # lf_nms_thresholds_idx = range(len(lf_nms_thresholds))
+
     results = defaultdict(list)
-    ideal_results = []
-    most_ideal_results = []
+    aligned_results = []
+    best_ever_results = []
 
     prev_time = time.time()
     cnt = 0
@@ -74,25 +85,24 @@ def alignment_step(config, dataset_lookup=None, model_mode='best_validation'):
         a+=1
 
         if a%100 == 0:
-            sum_results = {}
-            for k, v in results.iteritems():
-                sum_results[k] = np.mean(v)
-            import operator
-            sum_results = sorted(sum_results.iteritems(), key=operator.itemgetter(1))
-            print a, sum_results[0]
+            print a, np.mean(aligned_results)
 
 
         x = x[0]
         if x is None:
+            print "Skipping alignment because it returned None"
             continue
 
         img = x['resized_img'].numpy()[0,...].transpose([2,1,0])
         img = ((img+1)*128).astype(np.uint8)
 
+        full_img = x['full_img'].numpy()[0,...].transpose([2,1,0])
+        full_img = ((full_img+1)*128).astype(np.uint8)
+
         gt_lines = x['gt_lines']
         gt = "\n".join(gt_lines)
 
-        out_original = e2e(x, use_full_img=config["training"]["alignment"]["use_full_resolution"])
+        out_original = e2e(x)
         if out_original is None:
             #TODO: not a good way to handle this, but fine for now
             print "Possible Error: Skipping alignment on image"
@@ -100,60 +110,65 @@ def alignment_step(config, dataset_lookup=None, model_mode='best_validation'):
 
         out_original = e2e_postprocessing.results_to_numpy(out_original)
         out_original['idx'] = np.arange(out_original['sol'].shape[0])
-
+        e2e_postprocessing.trim_ends(out_original)
         decoded_hw, decoded_raw_hw = e2e_postprocessing.decode_handwriting(out_original, idx_to_char)
         pick, costs = e2e_postprocessing.align_to_gt_lines(decoded_hw, gt_lines)
 
-        most_ideal_pred_lines, improved_idxs = validation_utils.update_ideal_results(pick, costs, decoded_hw, x['gt_json'])
-        # validation_utils.save_improved_idxs(improved_idxs, decoded_hw,
-        #                                     decoded_raw_hw, out_original,
-        #                                     x, config[dataset_lookup]['json_folder'], config['alignment']['trim_to_sol'])
 
-        most_ideal_pred_lines = "\n".join(most_ideal_pred_lines)
+        best_ever_pred_lines, improved_idxs = validation_utils.update_ideal_results(pick, costs, decoded_hw, x['gt_json'])
+        validation_utils.save_improved_idxs(improved_idxs, decoded_hw,
+                                            decoded_raw_hw, out_original,
+                                            x, config['training'][dataset_lookup]['json_folder'])
 
-        ideal_pred_lines = [decoded_hw[i] for i in pick]
-        ideal_pred_lines = "\n".join(ideal_pred_lines)
+        best_ever_pred_lines = "\n".join(best_ever_pred_lines)
+        error = error_rates.cer(gt, best_ever_pred_lines)
+        best_ever_results.append(error)
 
-        error = error_rates.cer(gt, ideal_pred_lines)
-        ideal_results.append(error)
+        aligned_pred_lines = [decoded_hw[i] for i in pick]
+        aligned_pred_lines = "\n".join(aligned_pred_lines)
+        error = error_rates.cer(gt, aligned_pred_lines)
+        aligned_results.append(error)
 
-        error = error_rates.cer(gt, most_ideal_pred_lines)
-        most_ideal_results.append(error)
 
-        for key in itertools.product(sol_thresholds_idx, lf_nms_ranges_idx, lf_nms_thresholds_idx):
-            i,j,k = key
-            sol_threshold = sol_thresholds[i]
-            lf_nms_range = lf_nms_ranges[j]
-            lf_nms_threshold = lf_nms_thresholds[k]
+        if dataset_lookup == "validation_set":
+            # We only care about the hyperparameter postprocessing seach for the validation set
+            for key in itertools.product(sol_thresholds_idx, lf_nms_ranges_idx, lf_nms_thresholds_idx):
+                i,j,k = key
+                sol_threshold = sol_thresholds[i]
+                lf_nms_range = lf_nms_ranges[j]
+                lf_nms_threshold = lf_nms_thresholds[k]
 
-            out = copy.copy(out_original)
+                out = copy.copy(out_original)
 
-            out = e2e_postprocessing.postprocess(out,
-                sol_threshold=sol_threshold,
-                lf_nms_params={
-                    "overlap_range": lf_nms_range,
-                    "overlap_threshold": lf_nms_threshold
-            })
-            order = e2e_postprocessing.read_order(out)
-            e2e_postprocessing.filter_on_pick(out, order)
+                out = e2e_postprocessing.postprocess(out,
+                    sol_threshold=sol_threshold,
+                    lf_nms_params={
+                        "overlap_range": lf_nms_range,
+                        "overlap_threshold": lf_nms_threshold
+                })
+                order = e2e_postprocessing.read_order(out)
+                e2e_postprocessing.filter_on_pick(out, order)
 
-            # draw_img = E2EModel.draw_output(out, img)
-            # cv2.imwrite("test_img.png", draw_img)
-            preds = [decoded_hw[i] for i in out['idx']]
-            pred = "\n".join(preds)
+                e2e_postprocessing.trim_ends(out)
 
-            error = error_rates.cer(gt, pred)
+                preds = [decoded_hw[i] for i in out['idx']]
+                pred = "\n".join(preds)
 
-            results[key].append(error)
+                error = error_rates.cer(gt, pred)
 
-    sum_results = {}
-    for k, v in results.iteritems():
-        sum_results[k] = np.mean(v)
+                results[key].append(error)
 
-    import operator
-    sum_results = sorted(sum_results.iteritems(), key=operator.itemgetter(1))
+    sum_results = None
+    if dataset_lookup == "validation_set":
+        # Skipping because we didn't do the hyperparameter search
+        sum_results = {}
+        for k, v in results.iteritems():
+            sum_results[k] = np.mean(v)
 
-    return sum_results[0], np.mean(ideal_results), np.mean(most_ideal_results), sol, lf, hw
+        sum_results = sorted(sum_results.iteritems(), key=operator.itemgetter(1))
+        sum_results = sum_results[0]
+
+    return sum_results, np.mean(aligned_results), np.mean(best_ever_results), sol, lf, hw
 
 if __name__ == "__main__":
 

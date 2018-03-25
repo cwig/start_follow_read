@@ -43,10 +43,10 @@ class AlignmentDataset(Dataset):
             self.ids = list(set(json_paths.keys()) & set(img_paths.keys()))
         self.ids.sort()
 
-        self.ids = self.ids[:10]
-
         if data_range is not None:
             self.ids = random.sample(self.ids, data_range)
+
+        print "Alignment Ids Count:", len(self.ids)
 
     def __len__(self):
         return len(self.ids)
@@ -54,7 +54,6 @@ class AlignmentDataset(Dataset):
     def __getitem__(self, idx):
 
         image_key = self.ids[idx]
-        print image_key
         # with open(gt_json_path) as f:
         #     gt_json = json.load(f)
 
@@ -66,6 +65,7 @@ class AlignmentDataset(Dataset):
             if gt_json is None:
                 return None
 
+
         img_path = self.img_paths[image_key]
 
         org_img = cv2.imread(img_path)
@@ -75,9 +75,7 @@ class AlignmentDataset(Dataset):
         full_img = torch.from_numpy(full_img)
         full_img = full_img / 128 - 1
 
-        # target_dim1 = int(512*1.25)
         target_dim1 = self.resize_width
-        # target_dim1 = 256
         s = target_dim1 / float(org_img.shape[1])
         target_dim0 = int(org_img.shape[0]/float(org_img.shape[1]) * target_dim1)
 

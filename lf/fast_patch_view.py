@@ -4,6 +4,8 @@ from torch.autograd import Variable
 from utils import transformation_utils
 
 def get_patches(image, crop_window, grid_gen, allow_end_early=False):
+
+
         pts = Variable(torch.FloatTensor([
             [-1.0, -1.0, 1.0, 1.0],
             [-1.0, 1.0, -1.0, 1.0],
@@ -26,6 +28,7 @@ def get_patches(image, crop_window, grid_gen, allow_end_early=False):
         translations = []
         N = transformation_utils.compute_renorm_matrix(memory_space)
         all_skipped = True
+
         for b_i in xrange(memory_space.size(0)):
 
             o = floored_idx_offsets[b_i]
@@ -82,6 +85,7 @@ def get_patches(image, crop_window, grid_gen, allow_end_early=False):
         translations = torch.cat(translations, 0)
         grid = grid_gen(translations.bmm(crop_window))
         grid = grid[:,:,:,0:2] / grid[:,:,:,2:3]
+
         resampled = torch.nn.functional.grid_sample(memory_space.transpose(2,3), grid, mode='bilinear')
 
         return resampled
