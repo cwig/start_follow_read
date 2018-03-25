@@ -87,8 +87,9 @@ training:
 
     batch_size: 8
     refresh_interval: 3600 #seconds
-    batches_per_epoch: 100 #batches
-    validation_size: 1000 #images
+    images_per_epoch: 20000 #batches
+    validation_subset_size: 2000 #images
+    reset_interval: 3600 #seconds
 
   alignment:
     accept_threshold: 0.1

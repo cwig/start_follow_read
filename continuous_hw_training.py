@@ -18,13 +18,18 @@ import os
 from utils import string_utils, error_rates
 import time
 import random
+import yaml
 
 
 def training_step(config):
-    allowed_training_time = config['hw']['interval_seconds']
+
+    hw_network_config = config['network']['hw']
+    train_config = config['training']
+
+    allowed_training_time = train_config['hw']['reset_interval']
     init_training_time = time.time()
 
-    char_set_path = config['hw']['char_set_path']
+    char_set_path = hw_network_config['char_set_path']
 
     with open(char_set_path) as f:
         char_set = json.load(f)
@@ -33,21 +38,35 @@ def training_step(config):
     for k,v in char_set['idx_to_char'].iteritems():
         idx_to_char[int(k)] = v
 
-    train_dataset = HwDataset(config['training_set']['json_folder'], config['training_set']['img_folder'],
-                              None, char_set['char_to_idx'], augmentation=True, img_height=config['hw']['img_height'])
-    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True, num_workers=0, collate_fn=hw_dataset.collate)
-    train_dataloader = DatasetWrapper(train_dataloader, config['hw']['batches_per_epoch'])
+    train_dataset = HwDataset(train_config['training_set']['json_folder'],
+                              train_config['training_set']['img_folder'],
+                              char_set['char_to_idx'], augmentation=True,
+                              img_height=hw_network_config['input_height'])
 
+    train_dataloader = DataLoader(train_dataset,
+                                 batch_size=train_config['hw']['batch_size'],
+                                 shuffle=False, num_workers=0,
+                                 collate_fn=hw_dataset.collate)
 
-    test_dataset = HwDataset(config['validation_set']['json_folder'], config['validation_set']['img_folder'],
-                             config['hw']['validation_size'], char_set['char_to_idx'], img_height=config['hw']['img_height'])
-    test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=False, num_workers=0, collate_fn=hw_dataset.collate)
+    batches_per_epoch = int(train_config['hw']['images_per_epoch']/train_config['hw']['batch_size'])
+    train_dataloader = DatasetWrapper(train_dataloader, batches_per_epoch)
 
-    hw = cnn_lstm.create_model(config['hw'])
-    hw_path = os.path.join(config['snapshot']['best_validation'], "hw.pt")
+    test_dataset = HwDataset(train_config['validation_set']['json_folder'],
+                             train_config['validation_set']['img_folder'],
+                             char_set['char_to_idx'],
+                             img_height=hw_network_config['input_height'],
+                             random_subset_size=train_config['hw']['validation_subset_size'])
+
+    test_dataloader = DataLoader(test_dataset,
+                                 batch_size=train_config['hw']['batch_size'],
+                                 shuffle=False, num_workers=0,
+                                 collate_fn=hw_dataset.collate)
+
+    hw = cnn_lstm.create_model(hw_network_config)
+    hw_path = os.path.join(train_config['snapshot']['best_validation'], "hw.pt")
     hw_state = safe_load.torch_state(hw_path)
     hw.load_state_dict(hw_state)
-
+    hw.cuda()
     criterion = CTCLoss()
     dtype = torch.cuda.FloatTensor
 
@@ -76,26 +95,20 @@ def training_step(config):
                 sum_loss += cer
                 steps += 1
 
-            # batch_size = preds.size(1)
-            # preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
-            #
-            # loss = criterion(preds, labels, preds_size, label_lengths)
-            #
-            # sum_loss += loss.data[0]
-            # steps += 1
 
         if epoch == 0:
             print "First Validation Step Complete"
             print "Benchmark Validation CER:", sum_loss/steps
             lowest_loss = sum_loss/steps
 
-            hw = cnn_lstm.create_model(config['hw'])
-            hw_path = os.path.join(config['snapshot']['current'], "hw.pt")
+            hw = cnn_lstm.create_model(hw_network_config)
+            hw_path = os.path.join(train_config['snapshot']['current'], "hw.pt")
             hw_state = safe_load.torch_state(hw_path)
             hw.load_state_dict(hw_state)
+            hw.cuda()
 
-            optimizer = torch.optim.Adam(hw.parameters(), lr=config['hw']['learning_rate'])
-            optim_path = os.path.join(config['snapshot']['current'], "hw_optim.pt")
+            optimizer = torch.optim.Adam(hw.parameters(), lr=train_config['hw']['learning_rate'])
+            optim_path = os.path.join(train_config['snapshot']['current'], "hw_optim.pt")
             if os.path.exists(optim_path):
                 print "Loading Optim Settings"
                 optimizer.load_state_dict(safe_load.torch_state(optim_path))
@@ -106,7 +119,7 @@ def training_step(config):
             lowest_loss = sum_loss/steps
             print "Saving Best"
 
-            dirname = config['snapshot']['best_validation']
+            dirname = train_config['snapshot']['best_validation']
             if not len(dirname) != 0 and os.path.exists(dirname):
                 os.makedirs(dirname)
 
@@ -166,21 +179,21 @@ def training_step(config):
 
     ## Save current snapshots for next iteration
     print "Saving Current"
-    dirname = config['snapshot']['current']
+    dirname = train_config['snapshot']['current']
     if not len(dirname) != 0 and os.path.exists(dirname):
         os.makedirs(dirname)
 
     save_path = os.path.join(dirname, "hw.pt")
     torch.save(hw.state_dict(), save_path)
 
-    optim_path = os.path.join(config['snapshot']['current'], "hw_optim.pt")
+    optim_path = os.path.join(dirname, "hw_optim.pt")
     torch.save(optimizer.state_dict(), optim_path)
 
 if __name__ == "__main__":
     config_path = sys.argv[1]
 
     with open(config_path) as f:
-        config = json.load(f)
+        config = yaml.load(f)
 
     cnt = 0
     while True:

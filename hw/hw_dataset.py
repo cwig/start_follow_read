@@ -55,7 +55,7 @@ def collate(batch):
     }
 
 class HwDataset(Dataset):
-    def __init__(self, json_folder, img_folder, char_to_idx, augmentation=False, img_height=32):
+    def __init__(self, json_folder, img_folder, char_to_idx, augmentation=False, img_height=32, random_subset_size=None):
         json_paths = {}
         for root, folders, files in os.walk(json_folder):
             for f in files:
@@ -88,8 +88,8 @@ class HwDataset(Dataset):
                     continue
                 self.detailed_ids.append((image_key, i))
 
-        # if data_range is not None:
-        #     self.detailed_ids = random.sample(self.detailed_ids, min(data_range, len(self.detailed_ids)))
+        if random_subset_size is not None:
+            self.detailed_ids = random.sample(self.detailed_ids, min(random_subset_size, len(self.detailed_ids)))
         print len(self.detailed_ids)
 
         self.ids = self.detailed_ids
