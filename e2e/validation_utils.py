@@ -69,9 +69,12 @@ def save_improved_idxs(improved_idxs, decoded_hw, decoded_raw_hw, out, x, json_f
         begin = out['beginning'][k]
         begin_f = int(np.floor(begin))
         p0 = out['lf'][begin_f][k]
-        p1 = out['lf'][begin_f+1][k]
-        t = begin - np.floor(begin)
-        p = p0 * (1 - t) + p1 * t
+        if begin_f+1 >= len(out['lf']):
+             p = p0
+        else:
+            p1 = out['lf'][begin_f+1][k]
+            t = begin - np.floor(begin)
+            p = p0 * (1 - t) + p1 * t
 
         sol_point = {
             "x0": p[0][1] * s,

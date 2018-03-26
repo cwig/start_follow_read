@@ -4,7 +4,6 @@ from torch.autograd import Variable
 
 import cv2
 import numpy as np
-import filter_utils
 from utils import string_utils, error_rates
 from utils import transformation_utils
 import handwriting_alignment_loss

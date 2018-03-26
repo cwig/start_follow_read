@@ -51,11 +51,11 @@ pretraining:
     
 training:
   training_set:
-    img_folder: "../hwn5-comp-2017/data/Train-B"
+    img_folder: "../hwn_e2e/data/Train-B"
     json_folder: "data/train_b/training"
 
   validation_set:
-    img_folder: "../hwn5-comp-2017/data/Train-B"
+    img_folder: "../hwn_e2e/data/Train-B"
     json_folder: "data/train_b/validation/9"
 
   sol:

@@ -21,7 +21,7 @@ import operator
 from e2e import e2e_model
 from e2e.e2e_model import E2EModel
 
-from e2e import alignment_dataset_single, e2e_postprocessing, visualization
+from e2e import alignment_dataset, e2e_postprocessing, visualization
 from e2e.alignment_dataset import AlignmentDataset
 
 from utils.continuous_state import init_model
@@ -38,7 +38,7 @@ from e2e import validation_utils
 def alignment_step(config, dataset_lookup=None, model_mode='best_validation'):
 
     dataset = AlignmentDataset(config['training'][dataset_lookup]['json_folder'], config['training'][dataset_lookup]['img_folder'], None)
-    dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=alignment_dataset_single.collate)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=alignment_dataset.collate)
 
     char_set_path = config['network']['hw']['char_set_path']
 
