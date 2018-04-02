@@ -27,19 +27,19 @@ def init_model(config, sol_dir='best_validation', lf_dir='best_validation', hw_d
     lf = None
     hw = None
 
-    if only_load is None or only_load == 'sol':
+    if only_load is None or only_load == 'sol' or 'sol' in only_load:
         sol = StartOfLineFinder(base_0, base_1)
         sol_state = safe_load.torch_state(os.path.join(config['training']['snapshot'][sol_dir], "sol.pt"))
         sol.load_state_dict(sol_state)
         sol.cuda()
 
-    if only_load is None or only_load == 'lf':
+    if only_load is None or only_load == 'lf' or 'lf' in only_load:
         lf = LineFollower(config['network']['hw']['input_height'])
         lf_state = safe_load.torch_state(os.path.join(config['training']['snapshot'][lf_dir], "lf.pt"))
         lf.load_state_dict(lf_state)
         lf.cuda()
 
-    if only_load is None or only_load == 'hw':
+    if only_load is None or only_load == 'hw' or 'hw' in only_load:
         hw = cnn_lstm.create_model(config['network']['hw'])
         hw_state = safe_load.torch_state(os.path.join(config['training']['snapshot'][hw_dir], "hw.pt"))
         hw.load_state_dict(hw_state)

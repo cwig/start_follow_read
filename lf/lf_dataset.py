@@ -117,9 +117,12 @@ class LfDataset(Dataset):
         img = img / 128.0 - 1.0
         img = torch.from_numpy(img)
 
+        gt = gt_json[line_idx]['gt']
+
         result = {
             "img": img,
             "lf_xyrs": positions,
-            "lf_xyxy": positions_xy
+            "lf_xyxy": positions_xy,
+            "gt": gt
         }
         return result
