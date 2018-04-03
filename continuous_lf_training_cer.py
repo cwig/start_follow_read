@@ -47,7 +47,8 @@ def training_step(config):
     init_training_time = time.time()
 
     train_dataset = LfDataset(train_config['training_set']['json_folder'],
-                              train_config['training_set']['img_folder'])
+                              train_config['training_set']['img_folder'],
+                              augmentation=True)
     train_dataloader = DataLoader(train_dataset,
                                   batch_size=1,
                                   shuffle=True, num_workers=0,

@@ -10,7 +10,7 @@ import numpy as np
 import math
 import random
 
-from utils import safe_load
+from utils import safe_load, augmentation
 
 def collate(batch):
     return batch
@@ -34,7 +34,7 @@ def get_subdivide_pt(i, pred_full, lf):
     return x, y
 
 class LfDataset(Dataset):
-    def __init__(self, json_folder, img_folder, random_subset_size=None):
+    def __init__(self, json_folder, img_folder, random_subset_size=None, augmentation=False):
         json_paths = {}
         for root, folders, files in os.walk(json_folder):
             for f in files:
@@ -51,6 +51,7 @@ class LfDataset(Dataset):
 
         self.img_paths = img_paths
         self.json_paths = json_paths
+        self.augmentation = augmentation
 
         self.ids = list(set(json_paths.keys()) & set(img_paths.keys()))
         self.ids.sort()
@@ -112,7 +113,14 @@ class LfDataset(Dataset):
 
             positions.append(torch.Tensor([mx, my, theta, d/2, 1.0]))
 
-        img = cv2.imread(img_path).astype(np.float32)
+        img = cv2.imread(img_path)
+        if self.augmentation:
+            img = augmentation.apply_random_color_rotation(img)
+            img = augmentation.apply_tensmeyer_brightness(img)
+
+
+
+        img = img.astype(np.float32)
         img = img.transpose()
         img = img / 128.0 - 1.0
         img = torch.from_numpy(img)

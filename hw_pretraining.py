@@ -57,6 +57,7 @@ test_dataloader = DataLoader(test_dataset,
 
 
 hw = cnn_lstm.create_model(hw_network_config)
+hw.cuda()
 
 optimizer = torch.optim.Adam(hw.parameters(), lr=pretrain_config['hw']['learning_rate'])
 criterion = CTCLoss()
@@ -92,7 +93,6 @@ for epoch in xrange(1000):
             cer = error_rates.cer(gt_line, pred_str)
             sum_loss += cer
             steps += 1
-
 
         batch_size = preds.size(1)
         preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))

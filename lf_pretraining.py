@@ -24,7 +24,8 @@ pretrain_config = config['pretraining']
 
 
 train_dataset = LfDataset(pretrain_config['training_set']['json_folder'],
-                          pretrain_config['training_set']['img_folder'])
+                          pretrain_config['training_set']['img_folder'],
+                          augmentation=True)
 train_dataloader = DataLoader(train_dataset,
                               batch_size=1,
                               shuffle=True, num_workers=0,

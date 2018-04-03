@@ -12,7 +12,7 @@ import math
 
 import grid_distortion
 
-from utils import string_utils, safe_load
+from utils import string_utils, safe_load, augmentation
 
 import random
 PADDING_CONSTANT = 0
@@ -136,11 +136,12 @@ class HwDataset(Dataset):
         if img is None:
             return None
 
-        img = img.astype(np.float32)
-
         if self.augmentation:
+            img = augmentation.apply_random_color_rotation(img)
+            img = augmentation.apply_tensmeyer_brightness(img)
             img = grid_distortion.warp_image(img)
 
+        img = img.astype(np.float32)
         img = img / 128.0 - 1.0
 
         gt = gt_json[line_idx]['gt']

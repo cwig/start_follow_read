@@ -12,6 +12,8 @@ from utils import safe_load
 import math
 import random
 
+from utils import augmentation
+
 def collate(batch):
 
     batch_size = len(batch)
@@ -142,6 +144,11 @@ class SolDataset(Dataset):
             })
             org_img = out['img']
             gt = out['sol_gt']
+
+
+            org_img = augmentation.apply_random_color_rotation(org_img)
+            org_img = augmentation.apply_tensmeyer_brightness(org_img)
+
 
         img = org_img.transpose([2,1,0])[None,...]
         img = img.astype(np.float32)
