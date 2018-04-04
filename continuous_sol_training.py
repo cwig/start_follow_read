@@ -26,17 +26,17 @@ import random
 import yaml
 
 from utils.continuous_state import init_model
+from utils.dataset_parse import load_file_list
 
 def training_step(config):
 
     train_config = config['training']
 
-
     allowed_training_time = train_config['sol']['reset_interval']
     init_training_time = time.time()
 
-    train_dataset = SolDataset(train_config['training_set']['json_folder'],
-                               train_config['training_set']['img_folder'],
+    training_set_list = load_file_list(train_config['training_set'])
+    train_dataset = SolDataset(training_set_list,
                                rescale_range=train_config['sol']['training_rescale_range'],
                                transform=CropTransform(train_config['sol']['crop_params']))
 
@@ -48,8 +48,8 @@ def training_step(config):
     batches_per_epoch = int(train_config['sol']['images_per_epoch']/train_config['sol']['batch_size'])
     train_dataloader = DatasetWrapper(train_dataloader, batches_per_epoch)
 
-    test_dataset = SolDataset(train_config['validation_set']['json_folder'],
-                              train_config['validation_set']['img_folder'],
+    test_set_list = load_file_list(train_config['validation_set'])
+    test_dataset = SolDataset(test_set_list,
                               rescale_range=train_config['sol']['validation_rescale_range'],
                               random_subset_size=train_config['sol']['validation_subset_size'],
                               transform=None)

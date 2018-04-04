@@ -64,6 +64,13 @@ def process_region(region, namespace):
         line_out['region_id'] = region.attrib['id']
         lines.append(line_out)
 
+    ground_truth = None
+    text_equiv = region.find(namespace+'TextEquiv')
+    if text_equiv is not None:
+        ground_truth = text_equiv.find(namespace+'Unicode').text
+
+    region_out['ground_truth'] = ground_truth
+
     return region_out, lines
 
 def process_line(line, namespace):

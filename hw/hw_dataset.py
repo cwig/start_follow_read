@@ -55,58 +55,41 @@ def collate(batch):
     }
 
 class HwDataset(Dataset):
-    def __init__(self, json_folder, img_folder, char_to_idx, augmentation=False, img_height=32, random_subset_size=None):
-        json_paths = {}
-        for root, folders, files in os.walk(json_folder):
-            for f in files:
-                if f.lower().endswith('.json'):
-                    img_id = f.split(".")[0]
-                    json_paths[img_id] = os.path.join(root, f)
+    def __init__(self, set_list, char_to_idx, augmentation=False, img_height=32, random_subset_size=None):
 
-        img_paths = {}
-        for root, folders, files in os.walk(img_folder):
-            for f in files:
-                if f.lower().endswith('.jpg'):
-                    img_id = f.split(".")[0]
-                    img_paths[img_id] = os.path.join(root, f)
-
-        self.img_paths = img_paths
-        self.json_paths = json_paths
         self.img_height = img_height
 
-        self.ids = list(set(json_paths.keys()) & set(img_paths.keys()))
+        self.ids = set_list
         self.ids.sort()
 
         self.detailed_ids = []
-        for image_key in self.ids:
-            d = safe_load.json_state(json_paths[image_key])
+        for ids_idx, paths in enumerate(self.ids):
+            json_path, img_path = paths
+            d = safe_load.json_state(json_path)
             if d is None:
                 continue
             for i in xrange(len(d)):
 
                 if 'hw_path' not in d[i]:
                     continue
-                self.detailed_ids.append((image_key, i))
+                self.detailed_ids.append((ids_idx, i))
 
         if random_subset_size is not None:
             self.detailed_ids = random.sample(self.detailed_ids, min(random_subset_size, len(self.detailed_ids)))
         print len(self.detailed_ids)
 
-        self.ids = self.detailed_ids
         self.char_to_idx = char_to_idx
-        self.json_folder = json_folder
         self.augmentation = augmentation
         self.warning=False
 
 
 
     def __len__(self):
-        return len(self.ids)
+        return len(self.detailed_ids)
 
     def __getitem__(self, idx):
-        image_key, line_idx = self.ids[idx]
-
-        gt_json_path = self.json_paths[image_key]
+        ids_idx, line_idx = self.detailed_ids[idx]
+        gt_json_path, img_path = self.ids[ids_idx]
         gt_json = safe_load.json_state(gt_json_path)
         if gt_json is None:
             return None
@@ -145,6 +128,8 @@ class HwDataset(Dataset):
         img = img / 128.0 - 1.0
 
         gt = gt_json[line_idx]['gt']
+        if len(gt) == 0:
+            return None
         gt_label = string_utils.str2label_single(gt, self.char_to_idx)
 
 

@@ -27,17 +27,29 @@ import time
 import random
 import yaml
 
+from utils import string_utils, error_rates
 from utils.continuous_state import init_model
+from utils.dataset_parse import load_file_list
 
 def training_step(config):
+
+    char_set_path = config['network']['hw']['char_set_path']
+
+    with open(char_set_path) as f:
+        char_set = json.load(f)
+
+    idx_to_char = {}
+    for k,v in char_set['idx_to_char'].iteritems():
+        idx_to_char[int(k)] = v
 
     train_config = config['training']
 
     allowed_training_time = train_config['lf']['reset_interval']
     init_training_time = time.time()
 
-    train_dataset = LfDataset(train_config['training_set']['json_folder'],
-                              train_config['training_set']['img_folder'])
+    training_set_list = load_file_list(train_config['training_set'])
+    train_dataset = LfDataset(training_set_list,
+                              augmentation=True)
     train_dataloader = DataLoader(train_dataset,
                                   batch_size=1,
                                   shuffle=True, num_workers=0,
@@ -45,15 +57,16 @@ def training_step(config):
     batches_per_epoch = int(train_config['lf']['images_per_epoch']/train_config['lf']['batch_size'])
     train_dataloader = DatasetWrapper(train_dataloader, batches_per_epoch)
 
-    test_dataset = LfDataset(train_config['validation_set']['json_folder'],
-                             train_config['validation_set']['img_folder'],
+    test_set_list = load_file_list(train_config['validation_set'])
+    test_dataset = LfDataset(test_set_list,
                              random_subset_size=train_config['lf']['validation_subset_size'])
     test_dataloader = DataLoader(test_dataset,
                                  batch_size=1,
                                  shuffle=False, num_workers=0,
                                  collate_fn=lf_dataset.collate)
 
-    _, lf, _ = init_model(config, only_load='lf')
+    _, lf, hw = init_model(config, only_load=['lf', 'hw'])
+    hw.eval()
 
     dtype = torch.cuda.FloatTensor
 
@@ -79,14 +92,35 @@ def training_step(config):
             #There might be a way to handle this case later,
             #but for now we will skip it
             if len(xy_positions) <= 1:
+                print "Skipping"
                 continue
 
-            grid_line, _, _, xy_output = lf(img, positions[:1], steps=len(positions), skip_grid=True)
+            grid_line, _, _, xy_output = lf(img, positions[:1], steps=len(positions), skip_grid=False)
 
-            loss = lf_loss.point_loss(xy_output, xy_positions)
+            line = torch.nn.functional.grid_sample(img.transpose(2,3), grid_line)
+            line = line.transpose(2,3)
+            predictions = hw(line)
 
-            sum_loss += loss.data[0]
+            out = predictions.permute(1,0,2).data.cpu().numpy()
+            gt_line = x['gt']
+            pred, raw_pred = string_utils.naive_decode(out[0])
+            pred_str = string_utils.label2str_single(pred, idx_to_char, False)
+            cer = error_rates.cer(gt_line, pred_str)
+            sum_loss += cer
             steps += 1
+
+            # l = line[0].transpose(0,1).transpose(1,2)
+            # l = (l + 1)*128
+            # l_np = l.data.cpu().numpy()
+            #
+            # cv2.imwrite("example_line_out.png", l_np)
+            # print "Saved!"
+            # raw_input()
+
+            # loss = lf_loss.point_loss(xy_output, xy_positions)
+            #
+            # sum_loss += loss.data[0]
+            # steps += 1
 
         if epoch == 0:
             print "First Validation Step Complete"
@@ -107,7 +141,7 @@ def training_step(config):
             lowest_loss = sum_loss/steps
             print "Saving Best"
 
-            dirname = config['snapshot']['best_validation']
+            dirname = train_config['snapshot']['best_validation']
             if not len(dirname) != 0 and os.path.exists(dirname):
                 os.makedirs(dirname)
 
@@ -154,12 +188,14 @@ def training_step(config):
 
             loss = lf_loss.point_loss(xy_output, xy_positions)
 
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             sum_loss += loss.data[0]
             steps += 1
+
 
         print "Train Loss", sum_loss/steps
         print "Real Epoch", train_dataloader.epoch

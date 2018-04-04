@@ -20,6 +20,7 @@ import time
 import random
 import yaml
 
+from utils.dataset_parse import load_file_list
 
 def training_step(config):
 
@@ -38,8 +39,8 @@ def training_step(config):
     for k,v in char_set['idx_to_char'].iteritems():
         idx_to_char[int(k)] = v
 
-    train_dataset = HwDataset(train_config['training_set']['json_folder'],
-                              train_config['training_set']['img_folder'],
+    training_set_list = load_file_list(train_config['training_set'])
+    train_dataset = HwDataset(training_set_list,
                               char_set['char_to_idx'], augmentation=True,
                               img_height=hw_network_config['input_height'])
 
@@ -51,8 +52,8 @@ def training_step(config):
     batches_per_epoch = int(train_config['hw']['images_per_epoch']/train_config['hw']['batch_size'])
     train_dataloader = DatasetWrapper(train_dataloader, batches_per_epoch)
 
-    test_dataset = HwDataset(train_config['validation_set']['json_folder'],
-                             train_config['validation_set']['img_folder'],
+    test_set_list = load_file_list(train_config['validation_set'])
+    test_dataset = HwDataset(test_set_list,
                              char_set['char_to_idx'],
                              img_height=hw_network_config['input_height'],
                              random_subset_size=train_config['hw']['validation_subset_size'])
@@ -78,9 +79,9 @@ def training_step(config):
         hw.eval()
         for x in test_dataloader:
             sys.stdout.flush()
-            line_imgs = Variable(x['line_imgs'].type(dtype), requires_grad=False)
-            labels =  Variable(x['labels'], requires_grad=False)
-            label_lengths = Variable(x['label_lengths'], requires_grad=False)
+            line_imgs = Variable(x['line_imgs'].type(dtype), requires_grad=False, volatile=True)
+            labels =  Variable(x['labels'], requires_grad=False, volatile=True)
+            label_lengths = Variable(x['label_lengths'], requires_grad=False, volatile=True)
 
             preds = hw(line_imgs).cpu()
 
@@ -140,8 +141,7 @@ def training_step(config):
         steps = 0.0
         hw.train()
         for i, x in enumerate(train_dataloader):
-            # print i
-            sys.stdout.flush()
+
             line_imgs = Variable(x['line_imgs'].type(dtype), requires_grad=False)
             labels =  Variable(x['labels'], requires_grad=False)
             label_lengths = Variable(x['label_lengths'], requires_grad=False)

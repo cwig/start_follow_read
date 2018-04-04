@@ -1,7 +1,7 @@
 network:
   sol:
-    base0: 16 #architecture dependant
-    base1: 16 #architecture dependant
+    base0: 16 #architecture dependant - don't change
+    base1: 16 #architecture dependant - don't change
  
   lf:
     look_ahead_matrix: 
@@ -16,14 +16,14 @@ network:
 
 pretraining:
   training_set:
-    img_folder: "../hwn5-comp-2017/data/Train-A"
-    json_folder: "data/init_train_a_2/training"
-    #json_folder: "../hwn_e2e_fsl/data/init_train_a"
+    img_folder: ""
+    json_folder: ""
+    file_list: "data/train_a_training_set.json"
 
   validation_set:
-    img_folder: "../hwn5-comp-2017/data/Train-A"
-    json_folder: "data/init_train_a_2/validation"
-    #json_folder: "../hwn_e2e_fsl/data/init_train_a"
+    img_folder: ""
+    json_folder: ""
+    file_list: "data/train_a_validation_set.json"
 
   sol:
     alpha_alignment: 0.1
@@ -33,7 +33,7 @@ pretraining:
        prob_label: 0.5
        crop_size: 256
     training_rescale_range: [384, 640]
-    validation_rescale_range: [512,512] #You should not validation on random range 
+    validation_rescale_range: [512,512] #Don't validate on random range 
     batch_size: 1 #During pretrain, only 45 images. If batch is 32 you would get 32 and 13 in an epoch
     images_per_epoch: 1000
 
@@ -51,12 +51,14 @@ pretraining:
     
 training:
   training_set:
-    img_folder: "../hwn_e2e/data/Train-B"
-    json_folder: "data/train_b/training"
+    img_folder: ""
+    json_folder: ""
+    file_list: "data/train_b_training_set.json"
 
   validation_set:
-    img_folder: "../hwn_e2e/data/Train-B"
-    json_folder: "data/train_b/validation/9"
+    img_folder: ""
+    json_folder: ""
+    file_list: "data/train_b_validation_set.json"
 
   sol:
     alpha_alignment: 0.1
@@ -95,11 +97,18 @@ training:
     accept_threshold: 0.1
     sol_resize_width: 512
     metric: "cer"
+    train_refresh_groups: 10
+
+    validation_post_processing:
+       sol_thresholds: [0.1,0.3,0.5,0.7,0.9]
+       lf_nms_ranges: [[0,6],[0,16],[0,20]]
+       lf_nms_thresholds: [0.1,0.3,0.5,0.7,0.9]
 
   snapshot:
     best_overall: "data/snapshots/best_overall"
     best_validation: "data/snapshots/best_validation"
     current: "data/snapshots/current"
+    pretrain: "data/snapshots/init"
   
   
   

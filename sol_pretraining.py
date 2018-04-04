@@ -10,6 +10,7 @@ from sol.sol_dataset import SolDataset
 from sol.crop_transform import CropTransform
 
 from utils.dataset_wrapper import DatasetWrapper
+from utils.dataset_parse import load_file_list
 
 import numpy as np
 import cv2
@@ -27,9 +28,8 @@ with open(sys.argv[1]) as f:
 sol_network_config = config['network']['sol']
 pretrain_config = config['pretraining']
 
-
-train_dataset = SolDataset(pretrain_config['training_set']['json_folder'],
-                           pretrain_config['training_set']['img_folder'],
+training_set_list = load_file_list(pretrain_config['training_set'])
+train_dataset = SolDataset(training_set_list,
                            rescale_range=pretrain_config['sol']['training_rescale_range'],
                            transform=CropTransform(pretrain_config['sol']['crop_params']))
 
@@ -41,8 +41,8 @@ train_dataloader = DataLoader(train_dataset,
 batches_per_epoch = int(pretrain_config['sol']['images_per_epoch']/pretrain_config['sol']['batch_size'])
 train_dataloader = DatasetWrapper(train_dataloader, batches_per_epoch)
 
-test_dataset = SolDataset(pretrain_config['validation_set']['json_folder'],
-                          pretrain_config['validation_set']['img_folder'],
+test_set_list = load_file_list(pretrain_config['validation_set'])
+test_dataset = SolDataset(test_set_list,
                           rescale_range=pretrain_config['sol']['validation_rescale_range'],
                           transform=None)
 test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=sol.sol_dataset.collate)

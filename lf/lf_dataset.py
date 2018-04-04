@@ -34,56 +34,38 @@ def get_subdivide_pt(i, pred_full, lf):
     return x, y
 
 class LfDataset(Dataset):
-    def __init__(self, json_folder, img_folder, random_subset_size=None, augmentation=False):
-        json_paths = {}
-        for root, folders, files in os.walk(json_folder):
-            for f in files:
-                if f.lower().endswith('.json'):
-                    img_id = f.split(".")[0]
-                    json_paths[img_id] = os.path.join(root, f)
-
-        img_paths = {}
-        for root, folders, files in os.walk(img_folder):
-            for f in files:
-                if f.lower().endswith('.jpg') or f.lower().endswith('.png'):
-                    img_id = f.split(".")[0]
-                    img_paths[img_id] = os.path.join(root, f)
-
-        self.img_paths = img_paths
-        self.json_paths = json_paths
+    def __init__(self, set_list, random_subset_size=None, augmentation=False):
         self.augmentation = augmentation
 
-        self.ids = list(set(json_paths.keys()) & set(img_paths.keys()))
+        self.ids = set_list
         self.ids.sort()
 
         self.detailed_ids = []
-        for image_key in self.ids:
+        for ids_idx, paths in enumerate(self.ids):
+            json_path, img_path = paths
 
-            d = safe_load.json_state(json_paths[image_key])
+            d = safe_load.json_state(json_path)
             if d is None:
                 continue
 
             for i in xrange(len(d)):
                 if 'lf' not in d[i]:
                     continue
-                self.detailed_ids.append((image_key, i))
+                self.detailed_ids.append((ids_idx, i))
 
         if random_subset_size is not None:
             self.detailed_ids = random.sample(self.detailed_ids, min(len(self.ids), random_subset_size))
 
         print(len(self.detailed_ids))
-        self.ids = self.detailed_ids
 
     def __len__(self):
-        return len(self.ids)
+        return len(self.detailed_ids)
 
     def __getitem__(self, idx):
 
-        image_key, line_idx = self.ids[idx]
-        gt_json_path = self.json_paths[image_key]
+        ids_idx, line_idx = self.detailed_ids[idx]
+        gt_json_path, img_path = self.ids[ids_idx]
         gt_json = safe_load.json_state(gt_json_path)
-
-        img_path = self.img_paths[image_key]
 
         positions = []
         positions_xy = []

@@ -293,10 +293,10 @@ def handle_single_image(xml_path, img_path, output_directory, config={}):
                         "y1": y1
                     })
 
-                output_file = os.path.join(output_directory, "full_page", basename, "{}~{}~{}.png".format(basename, line['region_id'], line['id']))
-                warp_output_file = os.path.join(output_directory, "full_page", basename, "{}-{}.png".format(basename, str(len(region_output_data))))
-                warp_output_file_save = os.path.join("full_page", basename, "{}-{}.png".format(basename, str(len(region_output_data))))
-                save_file = os.path.join("full_page", basename, "{}~{}~{}.png".format(basename, line['region_id'], line['id']))
+                output_file = os.path.join(output_directory, basename, "{}~{}~{}.png".format(basename, line['region_id'], line['id']))
+                warp_output_file = os.path.join(output_directory, basename, "{}-{}.png".format(basename, str(len(region_output_data))))
+                warp_output_file_save = os.path.join(basename, "{}-{}.png".format(basename, str(len(region_output_data))))
+                save_file = os.path.join(basename, "{}~{}~{}.png".format(basename, line['region_id'], line['id']))
                 region_output_data.append({
                     "gt": line.get("ground_truth", ""),
                     "image_path": save_file,
@@ -317,14 +317,14 @@ def handle_single_image(xml_path, img_path, output_directory, config={}):
     else:
         print "WARNING: {} has no lines".format(xml_path)
 
-    output_data_path =os.path.join(output_directory, "full_page", basename, "{}.json".format(basename))
+    output_data_path =os.path.join(output_directory, basename, "{}.json".format(basename))
     if not os.path.exists(os.path.dirname(output_data_path)):
         os.makedirs(os.path.dirname(output_data_path))
 
     with open(output_data_path, 'w') as f:
         json.dump(output_data, f)
 
-    return output_data
+    return output_data_path
 
 def find_best_xml(list_of_files, filename):
 
@@ -397,28 +397,13 @@ def process_dir(xml_directory, img_directory, output_directory):
 
         img_path = os.path.join(img_path, filename+image_ext[filename])
         success = False
-        for xml_path in find_best_xml(xml_paths, filename):
-            # if filename != "000015":
-            #     continue
-            xml_path = os.path.join(xml_path, filename+".xml")
-            # try:
-            if True:
-                ground_truth = handle_single_image(xml_path, img_path, this_output_directory, {})
-                all_ground_truth.extend(ground_truth)
-                success = True
-                break
-            # except KeyboardInterrupt:
-            #     raise
-            # except Exception, e:
-            #     print e
-            #     print "Failed Attempt... ", filename
-            #     continue
+        xml_path = find_best_xml(xml_paths, filename)[0]
 
-        if not success:
-            out_str = filename+" Failed"
-            print "".join(["*"]*len(out_str))
-            print filename, "Failed"
-            print "".join(["*"]*len(out_str))
+        xml_path = os.path.join(xml_path, filename+".xml")
+
+        json_path = handle_single_image(xml_path, img_path, this_output_directory, {})
+        all_ground_truth.append([json_path, img_path])
+
 
     return all_ground_truth
 
@@ -427,9 +412,19 @@ if __name__ == "__main__":
     img_directory = sys.argv[2]
 
     output_directory = sys.argv[3]
-    output_json = sys.argv[4]
+    training_output_json = sys.argv[4]
+    validation_output_json = sys.argv[5]
     all_ground_truth = process_dir(xml_directory, img_directory, output_directory)
+    all_ground_truth.sort()
 
-    print "Total Size:", len(all_ground_truth)
-    with open(output_json, 'w') as f:
-        json.dump(all_ground_truth, f)
+    training_list = all_ground_truth[:45]
+    validation_list = all_ground_truth[45:]
+
+    print "Training Size:", len(training_list)
+    print "Validation Size:", len(validation_list)
+
+    with open(training_output_json, 'w') as f:
+        json.dump(training_list, f)
+
+    with open(validation_output_json, 'w') as f:
+        json.dump(validation_list, f)

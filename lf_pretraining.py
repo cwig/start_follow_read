@@ -8,6 +8,7 @@ from lf import lf_dataset, lf_loss
 from lf.lf_dataset import LfDataset
 from lf.line_follower import LineFollower
 from utils.dataset_wrapper import DatasetWrapper
+from utils.dataset_parse import load_file_list
 
 import numpy as np
 import cv2
@@ -22,9 +23,9 @@ with open(sys.argv[1]) as f:
 sol_network_config = config['network']['sol']
 pretrain_config = config['pretraining']
 
+training_set_list = load_file_list(pretrain_config['training_set'])
 
-train_dataset = LfDataset(pretrain_config['training_set']['json_folder'],
-                          pretrain_config['training_set']['img_folder'],
+train_dataset = LfDataset(training_set_list,
                           augmentation=True)
 train_dataloader = DataLoader(train_dataset,
                               batch_size=1,
@@ -33,8 +34,8 @@ train_dataloader = DataLoader(train_dataset,
 batches_per_epoch = int(pretrain_config['lf']['images_per_epoch']/pretrain_config['lf']['batch_size'])
 train_dataloader = DatasetWrapper(train_dataloader, batches_per_epoch)
 
-test_dataset = LfDataset(pretrain_config['validation_set']['json_folder'],
-                         pretrain_config['validation_set']['img_folder'])
+test_set_list = load_file_list(pretrain_config['validation_set'])
+test_dataset = LfDataset(test_set_list)
 test_dataloader = DataLoader(test_dataset,
                              batch_size=1,
                              shuffle=False, num_workers=0,

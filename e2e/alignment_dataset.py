@@ -12,35 +12,13 @@ def collate(batch):
 
 class AlignmentDataset(Dataset):
 
-    def __init__(self, json_folder, img_folder, data_range=None, ignore_json=False, resize_width=512):
+    def __init__(self, set_list, data_range=None, ignore_json=False, resize_width=512):
 
-        json_paths = {}
-        for root, folders, files in os.walk(json_folder):
-            for f in files:
-                if f.lower().endswith('.json'):
-                    img_id = f.split(".")[0]
-                    json_paths[img_id] = os.path.join(root, f)
-
-        img_paths = {}
-        all_imgs = []
-        for root, folders, files in os.walk(img_folder):
-            for f in files:
-                if f.lower().endswith('.jpg'):
-                    img_id = f.split(".")[0]
-                    all_imgs.append(f)
-                    img_paths[img_id] = os.path.join(root, f)
-
-
-        self.img_paths = img_paths
-        self.json_paths = json_paths
         self.ignore_json = ignore_json
 
         self.resize_width = resize_width
 
-        if self.ignore_json:
-            self.ids = list(img_paths.keys())
-        else:
-            self.ids = list(set(json_paths.keys()) & set(img_paths.keys()))
+        self.ids = set_list
         self.ids.sort()
 
         if data_range is not None:
@@ -53,20 +31,13 @@ class AlignmentDataset(Dataset):
 
     def __getitem__(self, idx):
 
-        image_key = self.ids[idx]
-        # with open(gt_json_path) as f:
-        #     gt_json = json.load(f)
+        gt_json_path, img_path = self.ids[idx]
 
-        gt_json_path = None
         gt_json = []
         if not self.ignore_json:
-            gt_json_path = self.json_paths[image_key]
             gt_json = safe_load.json_state(gt_json_path)
             if gt_json is None:
                 return None
-
-
-        img_path = self.img_paths[image_key]
 
         org_img = cv2.imread(img_path)
 
@@ -84,6 +55,8 @@ class AlignmentDataset(Dataset):
         img = img.transpose([2,1,0])[None,...]
         img = torch.from_numpy(img)
         img = img / 128 - 1
+
+        image_key = img_path[:-len('.jpg')]
 
         return {
             "resized_img": img,

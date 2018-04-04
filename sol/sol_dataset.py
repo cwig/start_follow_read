@@ -52,34 +52,18 @@ def collate(batch):
 
 # CNT = 0
 class SolDataset(Dataset):
-    def __init__(self, json_folder, img_folder, rescale_range=None, transform=None, random_subset_size=None):
+    def __init__(self, set_list, rescale_range=None, transform=None, random_subset_size=None):
 
-        json_paths = {}
-        for root, folders, files in os.walk(json_folder):
-            for f in files:
-                if f.lower().endswith('.json'):
-                    img_id = f.split(".")[0]
-                    json_paths[img_id] = os.path.join(root, f)
-
-        img_paths = {}
-        for root, folders, files in os.walk(img_folder):
-            for f in files:
-                if f.lower().endswith('.jpg'):
-                    img_id = f.split(".")[0]
-                    img_paths[img_id] = os.path.join(root, f)
 
         self.rescale_range = rescale_range
-        self.img_paths = img_paths
-        self.json_paths = json_paths
 
-        self.ids = list(set(json_paths.keys()) & set(img_paths.keys()))
+        self.ids = set_list
         self.ids.sort()
 
         new_ids = []
-        for image_key in self.ids:
+        for json_path, img_path in self.ids:
 
-            gt_json_path = self.json_paths[image_key]
-            gt_json = safe_load.json_state(gt_json_path)
+            gt_json = safe_load.json_state(json_path)
             if gt_json is None:
                 continue
             failed = False
@@ -90,7 +74,9 @@ class SolDataset(Dataset):
 
             if failed:
                 continue
-            new_ids.append(image_key)
+            new_ids.append([
+                json_path, img_path
+            ])
 
         self.ids = new_ids
 
@@ -105,14 +91,11 @@ class SolDataset(Dataset):
 
     def __getitem__(self, idx):
 
-        image_key = self.ids[idx]
-        gt_json_path = self.json_paths[image_key]
+        gt_json_path, img_path = self.ids[idx]
 
         gt_json = safe_load.json_state(gt_json_path)
         if gt_json is None:
             return None
-
-        img_path = self.img_paths[image_key]
 
         org_img = cv2.imread(img_path)
         target_dim1 = int(np.random.uniform(self.rescale_range[0], self.rescale_range[1]))
