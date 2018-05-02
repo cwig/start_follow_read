@@ -64,6 +64,7 @@ alpha_backprop = pretrain_config['sol']['alpha_backprop']
 optimizer = torch.optim.Adam(sol.parameters(), lr=pretrain_config['sol']['learning_rate'])
 
 lowest_loss = np.inf
+cnt_since_last_improvement = 0
 for epoch in xrange(1000):
     print "Epoch", epoch
 
@@ -113,12 +114,14 @@ for epoch in xrange(1000):
         org_img = ((org_img + 1)*128).astype(np.uint8)
         org_img = org_img.copy()
         org_img = drawing.draw_sol_torch(predictions, org_img)
-        cv2.imwrite("data/sol_val_2/{}.png".format(step_i), org_img)
+        # cv2.imwrite("data/sol_val_2/{}.png".format(step_i), org_img)
 
         sum_loss += loss.data[0]
         steps += 1
 
+    cnt_since_last_improvement += 1
     if lowest_loss > sum_loss/steps:
+        cnt_since_last_improvement = 0
         lowest_loss = sum_loss/steps
         print "Saving Best"
 
@@ -129,3 +132,6 @@ for epoch in xrange(1000):
 
     print "Test Loss", sum_loss/steps, lowest_loss
     print ""
+
+    if cnt_since_last_improvement >= pretrain_config['sol']['stop_after_no_improvement']:
+        break

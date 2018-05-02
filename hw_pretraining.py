@@ -72,6 +72,7 @@ optimizer = torch.optim.Adam(hw.parameters(), lr=pretrain_config['hw']['learning
 dtype = torch.cuda.FloatTensor
 
 lowest_loss = np.inf
+cnt_since_last_improvement = 0
 for epoch in xrange(1000):
     print "Epoch", epoch
     sum_loss = 0.0
@@ -133,8 +134,9 @@ for epoch in xrange(1000):
             sum_loss += cer
             steps += 1
 
-
+    cnt_since_last_improvement += 1
     if lowest_loss > sum_loss/steps:
+        cnt_since_last_improvement = 0
         lowest_loss = sum_loss/steps
         print "Saving Best"
 
@@ -143,6 +145,8 @@ for epoch in xrange(1000):
 
         torch.save(hw.state_dict(), os.path.join(pretrain_config['snapshot_path'], 'hw.pt'))
 
-
     print "Test Loss", sum_loss/steps, lowest_loss
     print ""
+
+    if cnt_since_last_improvement >= pretrain_config['hw']['stop_after_no_improvement']:
+        break

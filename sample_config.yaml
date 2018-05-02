@@ -43,16 +43,19 @@ pretraining:
     validation_rescale_range: [512,512] #Don't validate on random range
     batch_size: 1 #During pretrain, only 45 images. If batch is 32 you would get 32 and 13 in an epoch
     images_per_epoch: 1000
+    stop_after_no_improvement: 10
 
   lf:
     learning_rate: 0.0001 #pyyaml bug: no scientific notation
     batch_size: 1
     images_per_epoch: 1000
+    stop_after_no_improvement: 10
 
   hw:
     learning_rate: 0.0002 #pyyaml bug: no scientific notation
     batch_size: 8
     images_per_epoch: 1000
+    stop_after_no_improvement: 10
 
   snapshot_path: "data/snapshots/init"
 

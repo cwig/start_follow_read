@@ -53,7 +53,7 @@ if __name__ == "__main__":
     dtype = torch.cuda.FloatTensor
     e2e.eval()
 
-    for image_path in reversed(sorted(image_paths)):
+    for image_path in sorted(image_paths):
         print image_path
 
         org_img = cv2.imread(image_path)
