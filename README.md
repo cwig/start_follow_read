@@ -1,4 +1,8 @@
 
+conda create -n sfr_env python=2.7
+source activate sfr_env
+conda list -e
+
 # Start Follow Read
 
 This repository is the implementation of the methods described in our paper [Start Follow Read: Full Page End-to-end Handwriting Recognition](http://example.com).
@@ -10,13 +14,13 @@ We will also include pretrained models.
 
 This is a non complete list of dependencies you need
 
-pytorch  
-opencv 3  
-numpy
-scipy
-pyclipper
-warpctc  
-editdistance
+- pytorch  
+- opencv 3  
+- numpy
+- scipy
+- pyclipper
+- warpctc  (https://github.com/SeanNaren/warp-ctc/tree/pytorch_bindings)
+- editdistance
 
 ## Prepare Data
 
@@ -25,21 +29,21 @@ Download Train-A and Train-B from the competition website. You need `Train-A.tbz
 #### Extract Files
 
 ```console
-$ mkdir data
-$ cd data
-$ tar jxf Train-A.tbz2
-$ tar jxf Train-B_batch1.tbz2
-$ tar jxf Train-B_batch2.tbz2
-$ cd ..
+mkdir data
+cd data
+tar jxf Train-A.tbz2
+tar jxf Train-B_batch1.tbz2
+tar jxf Train-B_batch2.tbz2
+cd ..
 ```
 
 #### Prepare Train-A
 
-This process can be a bit slow because of the inefficient normalization code.
+This process can be a bit slow because the normalization code is inefficient.
 This extracts start of lines positions, line follower targets, and normalized HW lines.
 
 ```console
-$ python preprocessing/prep_train_a.py data/Train-A/page data/Train-A data/train_a data/train_a_training_set.json data/train_a_validation_set.json  
+python preprocessing/prep_train_a.py data/Train-A/page data/Train-A data/train_a data/train_a_training_set.json data/train_a_validation_set.json  
 ```
 
 #### Prepare Train-B
@@ -47,7 +51,7 @@ $ python preprocessing/prep_train_a.py data/Train-A/page data/Train-A data/train
 This extracts only the GT lines from the XML.
 
 ```console
-$ python preprocessing/prep_train_b.py data/Train-B data/Train-B data/train_b data/train_b_training_set.json data/train_b_validation_set.json
+python preprocessing/prep_train_b.py data/Train-B data/Train-B data/train_b data/train_b_training_set.json data/train_b_validation_set.json
 ```
 
 #### Generate Character Settings
@@ -71,6 +75,8 @@ The 32 pixel tall images should be accurate enough for a good alignment.
 All of these can be run at the same time. You can probably fit all three on a single 8 GB GPU.
 Currently there is no stopping criteria except for after a 1000 epochs which is much longer than you should need.
 Sorry, no graphs of the training and validation loss at this time.
+
+A sample SLURM file to pretrain can be found in `slurm_examples/pretrain.sh`.
 
 #### Start of Line
 
@@ -113,7 +119,7 @@ I have run using 4 GPUs.
 You could do it on a single GPU but you would have to adapt the code so do that.
 
 For BYU's super computer I run the following SLURM files for 4 GPUs.
-You can run the python files independent of the SLUMR scripts.
+You can run the python files independent of the SLURM scripts.
 
 #### Initial Alignment
 
@@ -158,7 +164,7 @@ module load opencv/3/0
 
 CUDA_VISIBLE_DEVICES=0 python -u continuous_validation.py sample_config.yaml >validation.out 2>&1 &
 CUDA_VISIBLE_DEVICES=1 python -u continuous_sol_training.py sample_config.yaml >sol_training.out 2>&1 &
-CUDA_VISIBLE_DEVICES=2 python -u continuous_lf_training_cer.py sample_config.yaml >lf_training.out 2>&1 &
+CUDA_VISIBLE_DEVICES=2 python -u continuous_lf_training.py sample_config.yaml >lf_training.out 2>&1 &
 CUDA_VISIBLE_DEVICES=3 python -u continuous_hw_training.py sample_config.yaml >hw_training.out 2>&1 &
 
 wait

@@ -47,24 +47,32 @@ def save_improved_idxs(improved_idxs, decoded_hw, decoded_raw_hw, out, x, json_f
 
         k = improved_idxs[i]
 
+        # We want to trim the LF results
+        # good to keep around the full length of the prediciton
+        # so we can generate the full line-level images later
+        # at a different resolution
         line_points = []
+        after_line_points = []
         lf_path = out['lf']
         end = out['ending'][k]
         for j in xrange(len(lf_path)):
             p = lf_path[j][k]
             s = out['results_scale']
 
-            line_points.append({
-                "x0": p[0][1] * s,
-                "x1": p[0][0] * s,
-                "y0": p[1][1] * s,
-                "y1": p[1][0] * s
-            })
-
             if j > end:
-                break
-
-
+                after_line_points.append({
+                    "x0": p[0][1] * s,
+                    "x1": p[0][0] * s,
+                    "y0": p[1][1] * s,
+                    "y1": p[1][0] * s
+                })
+            else:
+                line_points.append({
+                    "x0": p[0][1] * s,
+                    "x1": p[0][0] * s,
+                    "y0": p[1][1] * s,
+                    "y1": p[1][0] * s
+                })
 
         begin = out['beginning'][k]
         begin_f = int(np.floor(begin))
@@ -89,6 +97,7 @@ def save_improved_idxs(improved_idxs, decoded_hw, decoded_raw_hw, out, x, json_f
         output_lines[i]['pred_full'] = decoded_raw_hw[k]
         output_lines[i]['sol'] = sol_point
         output_lines[i]['lf'] = line_points
+        output_lines[i]['after_lf'] = after_line_points
         output_lines[i]['start_idx'] = 1 #TODO: update to backward idx
         output_lines[i]['hw_path'] = img_file_name
 

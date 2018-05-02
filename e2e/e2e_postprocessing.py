@@ -153,7 +153,7 @@ def results_to_numpy(out):
         "lf": [l.data.cpu().numpy() for l in out['lf']] if out['lf'] is not None else None,
         "hw": out['hw'].data.cpu().numpy(),
         "results_scale": out['results_scale'],
-        "line_imgs": out['line_imgs']
+        "line_imgs": out['line_imgs'],
     }
 
 def align_to_gt_lines(decoded_hw, gt_lines):
