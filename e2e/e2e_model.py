@@ -98,7 +98,7 @@ class E2EModel(nn.Module):
             step_size = 5
             extra_bw = 1
             forward_steps = 40
-
+            
             grid_line, _, out_positions, xy_positions = self.lf(expand_img, sub_positions, steps=step_size)
             grid_line, _, out_positions, xy_positions = self.lf(expand_img, [out_positions[step_size]], steps=step_size+extra_bw, negate_lw=True)
             grid_line, _, out_positions, xy_positions = self.lf(expand_img, [out_positions[step_size+extra_bw]], steps=forward_steps, allow_end_early=True)

@@ -148,5 +148,5 @@ for epoch in xrange(1000):
     print "Test Loss", sum_loss/steps, lowest_loss
     print ""
 
-    if cnt_since_last_improvement >= pretrain_config['hw']['stop_after_no_improvement']:
+    if cnt_since_last_improvement >= pretrain_config['hw']['stop_after_no_improvement'] and lowest_loss<0.9:
         break

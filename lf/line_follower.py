@@ -113,6 +113,13 @@ class LineFollower(nn.Module):
                 #get patches checks to see if stopping early is allowed
                 break
 
+            if resampled is None and i == 0:
+                #Odd case where it start completely off of the edge
+                #This happens rarely, but maybe should be more eligantly handled
+                #in the future
+                resampled = Variable(torch.zeros(crop_window.size(0), 3, 32, 32).type_as(image.data), requires_grad=False)
+
+
             # Process Window CNN
             cnn_out = self.cnn(resampled)
             cnn_out = torch.squeeze(cnn_out, dim=2)

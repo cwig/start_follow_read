@@ -54,6 +54,14 @@ This extracts only the GT lines from the XML.
 python preprocessing/prep_train_b.py data/Train-B data/Train-B data/train_b data/train_b_training_set.json data/train_b_validation_set.json
 ```
 
+#### Prepare Test data
+
+Currently we only support running the tests for the most difficult Test-B data. When we compute the results for the Test-B while fully exploiting the competition provided regions-of-interest (ROI) we have to do a preprocessing step. This process masks out parts of the image that are not contained in the ROI.
+
+```
+python preprocessing/prep_test_b_with_regions.py data/Test-B data/Test-B data/train_b_roi
+```
+
 #### Generate Character Settings
 
 This will generate a character set based on the lines in both Train-A and Train-B.
@@ -80,7 +88,7 @@ A sample SLURM file to pretrain can be found in `slurm_examples/pretrain.sh`.
 
 #### Start of Line
 
-There is no built in stopping criteria. You should expect to be done when the validation loss is around 50-60.
+You should expect to be done when the validation loss is around 50-60.
 
 ```console
 python sol_pretraining.py sample_config.yaml  
@@ -88,7 +96,7 @@ python sol_pretraining.py sample_config.yaml
 
 #### Line Follower
 
-There is no built in stopping criteria. You should expect to be done when the validation loss is around 40-50.
+You should expect to be done when the validation loss is around 40-50.
 
 ```console
 python lf_pretraining.py sample_config.yaml  
@@ -96,7 +104,7 @@ python lf_pretraining.py sample_config.yaml
 
 #### Handwriting Recognition
 
-There is no built in stopping criteria. You should expect to be done when the validation CER is around 0.50 to 0.55.
+You should expect to be done when the validation CER is around 0.50 to 0.55.
 
 ```console
 python hw_pretraining.py sample_config.yaml  
@@ -116,7 +124,7 @@ cp -r data/snapshots/init data/snapshots/current
 
 Training of each component and alignment can be performed independently.
 I have run using 4 GPUs.
-You could do it on a single GPU but you would have to adapt the code so do that.
+You could do it on a single GPU but you would have to adapt the code to do that.
 
 For BYU's super computer I run the following SLURM files for 4 GPUs.
 You can run the python files independent of the SLURM scripts.
