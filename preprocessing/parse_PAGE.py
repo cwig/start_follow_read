@@ -85,7 +85,8 @@ def process_line(line, namespace):
             ro = int("".join([v for v in custom[roIdx+1] if v.isdigit()]))
             line_out['read_order'] = ro
 
-    line_out['id'] = line.attrib['id']
+    if 'id' in line.attrib:
+        line_out['id'] = line.attrib['id']
 
     baseline = line.find(namespace+'Baseline')
 

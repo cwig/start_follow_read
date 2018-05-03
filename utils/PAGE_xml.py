@@ -43,6 +43,16 @@ def create_output_xml(xml_path, out, output_strings, output_path):
 
         tree.write(output_path, encoding="UTF-8",xml_declaration=True)
 
+def create_output_xml_roi(xml_path, out, output_strings, output_path, roi_id):
+    tree, root, namespace = load_xml(xml_path)
+    data = parse_PAGE.processXML(root, namespace)
+
+    fill_region(root, {
+        roi_id: (out, output_strings)
+    })
+
+    tree.write(output_path, encoding="UTF-8",xml_declaration=True)
+
 def empty_regions(root):
     namespace = get_namespace(root)
     for page in root.findall(namespace+'Page'):
@@ -118,22 +128,20 @@ def assign_path_to_region(out, regions):
 
     return np.array(scores), np.array(background_scores), np.array(total_areas)
 
-def load_regions(root, region_ids, alignments, out, output_strings):
+def fill_region(root, region_id_map):
     namespace = get_namespace(root)
 
     cnt = 0
     for page in root.findall(namespace+'Page'):
         for region in page.findall(namespace+"TextRegion"):
             region_id = region.attrib['id']
-            region_id_idx = region_ids.index(region_id)
-            out_select = np.where(alignments == region_id_idx)
-            out_pick = e2e_postprocessing.filter_on_pick_no_copy(out, out_select)
-            output_strings_pick = [output_strings[i] for i in out_select[0]]
 
+            if region_id not in region_id_map:
+                continue
+
+            out_pick, output_strings_pick = region_id_map[region_id]
 
             for i, handwriting_text in enumerate(output_strings_pick):
-
-
                 text_line = ET.Element(namespace+"TextLine")
                 region.append(text_line)
                 text_line.attrib['reference_image_path'] = "line_" + str(i) +"_"+region_id + ".png"
@@ -155,3 +163,18 @@ def load_regions(root, region_ids, alignments, out, output_strings):
                 line_unicode = ET.Element(namespace+"Unicode")
                 text_equiv.append(line_unicode)
                 line_unicode.text = handwriting_text
+
+def load_regions(root, region_ids, alignments, out, output_strings):
+    namespace = get_namespace(root)
+
+    region_id_map = {}
+    for page in root.findall(namespace+'Page'):
+        for region in page.findall(namespace+"TextRegion"):
+            region_id = region.attrib['id']
+            region_id_idx = region_ids.index(region_id)
+            out_select = np.where(alignments == region_id_idx)
+            out_pick = e2e_postprocessing.filter_on_pick_no_copy(out, out_select)
+            output_strings_pick = [output_strings[i] for i in out_select[0]]
+            region_id_map[region_id] = (out_pick, output_strings_pick)
+
+    fill_region(root, region_id_map)

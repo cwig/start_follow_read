@@ -41,6 +41,7 @@ def main():
     parser.add_argument('--out_xml_folder')
     parser.add_argument('--lm', action='store_true')
     parser.add_argument('--aug', action='store_true')
+    parser.add_argument('--roi', action='store_true')
     args = parser.parse_args()
 
 
@@ -61,6 +62,7 @@ def main():
 
     use_lm = args.lm
     use_aug = args.aug
+    use_roi = args.roi
 
     with open(config_path) as f:
         config = yaml.load(f)
@@ -192,13 +194,28 @@ def main():
             f.write("\n".join(output_strings))
 
         key = os.path.basename(image_path)[:-len(".jpg")]
-        if in_xml_folder:
+        if use_roi:
+            key,region_id = key.split("_",1)
+            region_id = region_id.split(".")[0]
+
+
             if key in in_xml_files:
                 in_xml_file = in_xml_files[key]
                 out_xml_file = os.path.join(out_xml_folder, os.path.basename(in_xml_file))
-                PAGE_xml.create_output_xml(in_xml_file, out, output_strings, out_xml_file)
+                PAGE_xml.create_output_xml_roi(in_xml_file, out, output_strings, out_xml_file, region_id)
+                PAGE_xml.fill_region
+                in_xml_files[key] = out_xml_file
             else:
                 print "Couldn't find xml file for ", key
+        else:
+            if in_xml_folder:
+                if key in in_xml_files:
+                    in_xml_file = in_xml_files[key]
+                    out_xml_file = os.path.join(out_xml_folder, os.path.basename(in_xml_file))
+                    PAGE_xml.create_output_xml(in_xml_file, out, output_strings, out_xml_file)
+                else:
+                    print "Couldn't find xml file for ", key
+
 
 
 
