@@ -82,11 +82,11 @@ def main():
 
                     all_lf_paths[len(lf_path)].append((lf_path, hw_path))
 
-                for pairs in all_lf_paths.values():
+                for cnt, pairs in all_lf_paths.iteritems():
                     lf_paths = [p[0] for p in pairs]
                     hw_paths = [p[1] for p in pairs]
 
-                    to_join = [[] for i in range(len(lf_paths))]
+                    to_join = [[] for i in xrange(cnt)]
                     for lf_path in lf_paths:
                         for i in xrange(len(lf_path)):
                             to_join[i].append(lf_path[i])
