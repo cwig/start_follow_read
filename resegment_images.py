@@ -19,14 +19,12 @@ def main():
     with open(config_path) as f:
         config = yaml.load(f)
 
-    for dataset_lookup in ['training_set']:
-    # for dataset_lookup in ['training_set', 'validation_set']:
+    for dataset_lookup in ['training_set', 'validation_set']:
         set_list = load_file_list(config['training'][dataset_lookup])
         dataset = AlignmentDataset(set_list, None)
-        dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=alignment_dataset.collate)
+        dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=8, collate_fn=alignment_dataset.collate)
 
-        output_grid_size = 60
-        # output_grid_size = config['network']['hw']['input_height']
+        output_grid_size = config['network']['hw']['input_height']
         t = ((np.arange(output_grid_size) + 0.5) / float(output_grid_size))[:,None].astype(np.float32)
         t = np.repeat(t,axis=1, repeats=output_grid_size)
         t = Variable(torch.from_numpy(t), requires_grad=False, volatile=True)
@@ -45,13 +43,7 @@ def main():
         for l in dataloader:
             for l_i in l:
                 img = Variable(l_i['full_img'], requires_grad=False, volatile=True)
-
-                img_np = l_i['full_img'].numpy()[0,...].transpose([2,1,0])
-                img_np = ((img_np+1)*128).astype(np.uint8)
-                img_np = img_np.copy()
-
                 renorm_matrix = transformation_utils.compute_renorm_matrix(img)[None,...]
-                # expanded_renorm_matrix = renorm_matrix.expand(1,3,3)
 
                 print l_i['img_key']
 
