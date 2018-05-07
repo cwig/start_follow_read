@@ -56,7 +56,7 @@ class AlignmentDataset(Dataset):
         img = torch.from_numpy(img)
         img = img / 128 - 1
 
-        image_key = img_path[:-len('.jpg')]
+        image_key = gt_json_path[:-len('.json')]
 
         return {
             "resized_img": img,
