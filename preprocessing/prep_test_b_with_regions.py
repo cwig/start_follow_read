@@ -6,7 +6,7 @@ from collections import defaultdict
 import xml.etree.ElementTree as ET
 import re
 import json
-from preprocessing import parse_PAGE
+import parse_PAGE
 import numpy as np
 
 import cv2
@@ -85,6 +85,7 @@ if __name__ == "__main__":
             if f.endswith(".jpg"):
                 basename = os.path.basename(f).replace(".jpg", "")
                 image_files[basename] = os.path.join(root, f)
+
 
     for k in xml_files:
         create_mask_images(xml_files[k], image_files[k], out_folder, k)

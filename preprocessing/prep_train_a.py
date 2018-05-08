@@ -5,7 +5,6 @@ import line_extraction
 import numpy as np
 import os
 import traceback
-import matplotlib.pyplot as plt
 from collections import defaultdict
 from scipy import ndimage
 import json

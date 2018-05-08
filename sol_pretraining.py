@@ -110,10 +110,10 @@ for epoch in xrange(1000):
         loss = alignment_loss(predictions, sol_gt, x['label_sizes'], alpha_alignment, alpha_backprop)
 
         ### Write images to file to visualization
-        org_img = img[0].data.cpu().numpy().transpose([2,1,0])
-        org_img = ((org_img + 1)*128).astype(np.uint8)
-        org_img = org_img.copy()
-        org_img = drawing.draw_sol_torch(predictions, org_img)
+        #org_img = img[0].data.cpu().numpy().transpose([2,1,0])
+        #org_img = ((org_img + 1)*128).astype(np.uint8)
+        #org_img = org_img.copy()
+        #org_img = drawing.draw_sol_torch(predictions, org_img)
         # cv2.imwrite("data/sol_val_2/{}.png".format(step_i), org_img)
 
         sum_loss += loss.data[0]
