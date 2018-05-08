@@ -1,11 +1,7 @@
 
-conda create -n sfr_env python=2.7
-source activate sfr_env
-conda list -e
-
 # Start Follow Read
 
-This repository is the implementation of the methods described in our paper [Start Follow Read: Full Page End-to-end Handwriting Recognition](http://example.com).
+This repository is the implementation of the methods described in our paper [Start, Follow, Read: Full-Page End-to-end Handwriting Recognition](http://example.com).
 All steps to reproduce our results for the [ICDAR2017 Competition on Handwritten Text Recognition on the READ Dataset](https://scriptnet.iit.demokritos.gr/competitions/8/) can be found in this repo.
 
 We will also include [pretrained models](http://example.com).
@@ -17,6 +13,8 @@ The dependencies are all found in `environment.yaml`. They are installed as foll
 ```
 conda env create -f environment.yml
 ```
+
+The environment is activated as `source activate sfr_env`. 
 
 You will need to install the following libraries from source. warp-ctc is needed for training.
 PyKaldi is used for the language model. A pretrained Start, Follow, Read network can run
