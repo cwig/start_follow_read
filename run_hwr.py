@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     char_to_idx = char_set['char_to_idx']
 
-    model_mode = "pretrain"
+    model_mode = "best_overall"
     sol, lf, hw = init_model(config, sol_dir=model_mode, lf_dir=model_mode, hw_dir=model_mode)
 
     e2e = E2EModel(sol, lf, hw)

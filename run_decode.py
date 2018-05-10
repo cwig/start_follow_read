@@ -18,7 +18,6 @@ from utils import PAGE_xml
 import cv2
 import codecs
 
-from utils import lm_decoder
 import yaml
 
 from e2e import e2e_postprocessing
@@ -63,6 +62,9 @@ def main():
     use_lm = args.lm
     use_aug = args.aug
     use_roi = args.roi
+
+    if use_lm:
+        from utils import lm_decoder
 
     with open(config_path) as f:
         config = yaml.load(f)
