@@ -1,12 +1,12 @@
 
 # Start Follow Read
 
-This repository is the implementation of the methods described in our paper [Start, Follow, Read: Full-Page End-to-end Handwriting Recognition](http://example.com).
+This repository is the implementation of the methods described in our paper [Start, Follow, Read: Full-Page End-to-end Handwriting Recognition](http://openaccess.thecvf.com/content_ECCV_2018/html/Curtis_Wigington_Start_Follow_Read_ECCV_2018_paper.html).
 All steps to reproduce our results for the [ICDAR2017 Competition on Handwritten Text Recognition on the READ Dataset](https://scriptnet.iit.demokritos.gr/competitions/8/) can be found in this repo.
 
 This code is free for academic and research use. For commercial use of our code and methods please contact [BYU Tech Transfer](techtransfer.byu.edu).
 
-We will also include [pretrained models](http://example.com).
+We will also include pretrained models, results, and the segmentation data inferred during training. These can be found on the [release page](https://github.com/cwig/start_follow_read/releases).
 
 
 ## Dependencies
@@ -16,7 +16,7 @@ The dependencies are all found in `environment.yaml`. They are installed as foll
 conda env create -f environment.yml
 ```
 
-The environment is activated as `source activate sfr_env`. 
+The environment is activated as `source activate sfr_env`.
 
 You will need to install the following libraries from source. warp-ctc is needed for training.
 PyKaldi is used for the language model. A pretrained Start, Follow, Read network can run
@@ -61,7 +61,7 @@ python preprocessing/prep_train_b.py data/Train-B data/Train-B data/train_b data
 Currently we only support running the tests for the Test-B task, not Test-A. When we compute the results for the Test-B while fully exploiting the competition provided regions-of-interest (ROI) we have to do a preprocessing step. This process masks out parts of the image that are not contained in the ROI.
 
 ```
-python preprocessing/prep_test_b_with_regions.py data/Test-B data/Test-B data/train_b_roi
+python preprocessing/prep_test_b_with_regions.py data/Test-B data/Test-B data/test_b_roi
 ```
 
 #### Generate Character Settings
@@ -188,7 +188,7 @@ python run_hwr.py data/test_b_roi sample_config_60.yaml data/test_b_roi_results
 ```
 
 ```
-python run_decode.py sample_config_60.yaml data/output/test_b_roi_results --in_xml_folder data/Test-B --out_xml_folder data/output/test_b_roi_xml --roi --aug --lm
+python run_decode.py sample_config_60.yaml data/test_b_roi_results --in_xml_folder data/Test-B --out_xml_folder data/test_b_roi_xml --roi --aug --lm
 ```
 
 #### Without using the competition regions-of-interest
@@ -198,15 +198,17 @@ python run_hwr.py data/test_b sample_config_60.yaml data/test_b_results
 ```
 
 ```
-python run_decode.py sample_config_60.yaml data/output/test_b_results --in_xml_folder data/Test-B --out_xml_folder data/output/test_b_xml --aug --lm
+python run_decode.py sample_config_60.yaml data/test_b_results --in_xml_folder data/Test-B --out_xml_folder data/test_b_xml --aug --lm
 ```
 
 #### Submission
 
-The xml folder needs to be compressed to a `.tar` and then can be submitted to the online evaluation system. We also include the xml files from our baseline system so you can compute the error with regards those predictions instead of submitting to the online system.
+The xml folder needs to be compressed to a `.tar` and then can be submitted to the [online evaluation system](https://scriptnet.iit.demokritos.gr/competitions/8/).
+
+We also include the xml files from our system so you can compute the error with regards those predictions instead of submitting to the online system. This will give you a rough idea of how your results compare to other results. The error rate is not computed the same as on the evaluation server.
 
 ``
-not yet documented
+python compare_results.py <path/to/xml1> <path/to/xml2>
 ``
 
 ## Validation (General)

@@ -85,7 +85,7 @@ def main():
         idx_to_char[int(k)] = v
 
     if use_aug:
-        model_mode = "pretrain"
+        model_mode = "best_overall"
         _,_, hw = init_model(config, hw_dir=model_mode, only_load="hw")
         dtype = torch.cuda.FloatTensor
         hw.eval()
