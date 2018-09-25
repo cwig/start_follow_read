@@ -216,29 +216,29 @@ python compare_results.py <path/to/xml1> <path/to/xml2>
 The network can be run on a collection of images as follows. This process produces intermediate results. The post processing to these results are applied in a separate script.
 
 ```
-python run_hwr.py <path/to/image/directory> sample_config.yaml <path/to/output/directory>
+python run_hwr.py <path/to/image/directory> sample_config_60.yaml <path/to/output/directory>
 ```
 
 The postprocessing has number of different parameters. The most simple version is as follows. The `<path/to/output/directory>` is the same path in the previous command. It will save a text file with the transcription and an image to visualize the segmentation.
 
 ```
-python run_decode.py sample_config.yaml <path/to/output/directory>
+python run_decode.py sample_config_60.yaml <path/to/output/directory>
 ```
 
 Run it with test-side augmentation:
 
 ```
-python run_decode.py sample_config.yaml <path/to/output/directory> --aug
+python run_decode.py sample_config_60.yaml <path/to/output/directory> --aug
 ```
 
 Run it with the language model:
 
 ```
-python run_decode.py sample_config.yaml <path/to/output/directory> --lm
+python run_decode.py sample_config_60.yaml <path/to/output/directory> --lm
 ```
 
 Run it with both the language model and test-side augmentation:
 
 ```
-python run_decode.py sample_config.yaml <path/to/output/directory> --aug --lm
+python run_decode.py sample_config_60.yaml <path/to/output/directory> --aug --lm
 ```
