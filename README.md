@@ -13,7 +13,7 @@ We will also include pretrained models, results, and the segmentation data infer
 
 The dependencies are all found in `environment.yaml`. They are installed as follows.
 ```
-conda env create -f environment.yml
+conda env create -f environment.yaml
 ```
 
 The environment is activated as `source activate sfr_env`.
