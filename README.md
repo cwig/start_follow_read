@@ -1,3 +1,5 @@
+This repo relies on an old version of pytorch and python2 and might be difficult to run at this point. A python3 version based on a newer version of pytorch has been developed. I personally haven't verified it for correctness, but it appears to mirror this code very closely. https://github.com/sharmaannapurna/start_follow_read_py3. 
+
 
 # Start Follow Read
 
