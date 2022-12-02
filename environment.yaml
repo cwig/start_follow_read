@@ -38,6 +38,6 @@ dependencies:
   - pyclipper==1.1.0
   - pyyaml==3.12
   - svgpathtools==1.3.2
-  - torch==3.10
-  - torchvision=0.2.1
+  - torch==0.3.1
+  - torchvision==0.2.1
 
